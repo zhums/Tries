@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "trie.h"
 
@@ -17,9 +18,13 @@
  */
 trie_node* trienode_create(char data)
 {
-	AZDEBUG("under construction!");
+        trie_node *new_node;
 
-	return NULL;
+	new_node = calloc(1, sizeof(*new_node));
+        if (new_node)
+		new_node->data = data;
+
+	return new_node;
 }
 
 /*
@@ -36,9 +41,23 @@ trie_node* trienode_create(char data)
  */
 trie* trie_create()
 {
-        AZDEBUG("under construction!");
+	trie *new_trie;
 
-	return NULL;
+	new_trie = (trie *)calloc(1, sizeof(*new_trie));
+	if (new_trie) {
+		trie_node *node;
+		
+		node = trienode_create('$');
+		if (node == NULL) {
+			free(new_trie);
+			new_trie = NULL;
+			goto out;
+		}
+
+		new_trie->root = node;
+	}
+out:
+	return new_trie;
 }
 
 /*
@@ -203,7 +222,13 @@ void trie_print_prefix(trie* t, char* prefix)
  */
 void trie_free(trie* t)
 {
-        AZDEBUG("under construction!");
+	if (t == NULL)
+		return;
+
+	if (t->root)
+		free(t->root);
+
+	free(t);
 }
 
 

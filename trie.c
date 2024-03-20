@@ -136,6 +136,23 @@ void trie_insert(trie* t, char* word)
 	}
 }
 
+static int trienode_contains(trie_node* node, char* word)
+{
+	int ret = 0;
+	int children_idx;
+
+        if (node == NULL)
+                return 0;
+
+        if (node->word && !strcmp(node->word, word))
+                return 1;
+
+        for (children_idx = 0; !ret && children_idx < ALPHABET_SIZE; children_idx++)
+                ret = trienode_contains(node->children[children_idx], word);
+
+        return ret;
+}
+
 /*
  * Purpose
  *	Checks if a word is piresent in the trie
@@ -159,9 +176,24 @@ void trie_insert(trie* t, char* word)
  */
 int trie_contains(trie* t, char* word)
 {
-        AZDEBUG("under construction!");
+        return trienode_contains(t->root, word);
+}
 
-        return 0;
+static int trienode_contains_prefix(trie_node* node, char* prefix)
+{
+        int ret = 0;
+        int children_idx;
+
+        if (node == NULL)
+                return 0;
+
+        if (node->word && !strncmp(node->word, prefix, strlen(prefix) - 1))
+                return 1;
+
+        for (children_idx = 0; !ret && children_idx < ALPHABET_SIZE; children_idx++)
+                ret = trienode_contains_prefix(node->children[children_idx], prefix);
+
+        return ret;
 }
 
 /*
@@ -185,9 +217,7 @@ int trie_contains(trie* t, char* word)
  */
 int trie_contains_prefix(trie* t, char* prefix)
 {
-        AZDEBUG("under construction!");
-
-        return 0;
+        return trienode_contains_prefix(t->root, prefix);
 }
 
 /*
@@ -233,6 +263,20 @@ void trie_print(trie* t)
 	trienode_print(t->root);
 }
 
+static void trienode_print_prefix(trie_node* node, char* prefix)
+{
+        int children_idx;
+
+        if (node == NULL)
+                return;
+
+        if (node->word && !strncmp(node->word, prefix, strlen(prefix) - 1))
+		printf("%s\n", node->word);
+
+        for (children_idx = 0; children_idx < ALPHABET_SIZE; children_idx++)
+                trienode_print_prefix(node->children[children_idx], prefix);
+}
+
 /*
  * Purpose
  *	Recursively prints (in ascending alphabetical order) all words in the given trie that begin with the given prefix
@@ -250,7 +294,7 @@ void trie_print(trie* t)
  */
 void trie_print_prefix(trie* t, char* prefix)
 {
-        AZDEBUG("under construction!");
+	trienode_print_prefix(t->root, prefix);
 }
 
 static void trienode_free(trie_node* node)

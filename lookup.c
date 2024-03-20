@@ -32,6 +32,29 @@ static void read_words(trie* my_trie)
 	}
 }
 
+typedef struct {
+	char cmd;
+	char *cmd_value;
+
+} command_pair;
+
+command_pair lookup;
+
+static void parse_command_opt(int argc, char *argv[])
+{
+	if (argc == 1) {
+		lookup.cmd = 'n';
+	} else if (argc == 3) {
+		if (!strcmp(argv[1], "p"))
+			lookup.cmd = 'p';
+		else if (!strcmp(argv[1], "c"))
+                        lookup.cmd = 'c';
+		else if (!strcmp(argv[1], "w"))
+                        lookup.cmd = 'w';
+                lookup.cmd_value = argv[2];
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	trie* my_trie = NULL;
@@ -47,14 +70,28 @@ int main(int argc, char *argv[])
 	read_words(my_trie);
 
 	/* Parse the command-line parameters passed to the program (see the comment in lookup.c for how to do this) */
-	AZTODO("Parse the command-line parameters");	
+	parse_command_opt(argc, argv);
 
 	/* Take the appropriate action as noted above */
-	AZTODO("action");	
+	switch (lookup.cmd) {
+	case 'p':
+		trie_print_prefix(my_trie, lookup.cmd_value);
+		break;
+	case 'c':
+		printf("Prefix %s: %d\n", lookup.cmd_value, trie_contains_prefix(my_trie, lookup.cmd_value));
+                break;
+	case 'w':
+		printf("Word %s: %d\n", lookup.cmd_value, trie_contains(my_trie, lookup.cmd_value));
+                break;
+	case 'n':
+		trie_print(my_trie);
+                break;
+	default:
+		print_usage();
+	}
 
 	/* Free your trie */
 	trie_free(my_trie);
 
-	printf("Exit from lookup!\n");
 	return 0;
 }

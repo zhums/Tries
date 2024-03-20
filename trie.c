@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "trie.h"
 
@@ -60,6 +61,33 @@ out:
 	return new_trie;
 }
 
+static trie_node * find_or_insert_node(trie_node *cur_node, char *word_ptr)
+{
+        trie_node *next_node = NULL;
+
+        int children_idx = word_ptr[0] - 'a';
+
+        // printf("find_or_insert_node %c children_idx %d\n", word_ptr[0], children_idx);
+        next_node = cur_node->children[children_idx];
+
+        if (next_node == NULL) {
+                next_node = trienode_create(word_ptr[0]);
+                if (next_node == NULL) {
+                        return NULL;
+		}
+                cur_node->children[children_idx] = next_node;
+        }
+
+        ++word_ptr;
+        if (word_ptr[0])
+                cur_node = find_or_insert_node(next_node, word_ptr);
+        else
+                cur_node = next_node;
+
+//        if (cur_node == NULL);
+        return cur_node;
+}
+
 /*
  * Purpose
  *	Inserts a word into the trie, if it doesn't already exist
@@ -97,7 +125,15 @@ out:
  */
 void trie_insert(trie* t, char* word)
 {
-        AZDEBUG("under construction!");
+	trie_node *target_node;
+
+//	printf("Insert %s\n", word);
+	target_node = find_or_insert_node(t->root, word);
+
+	if (target_node && target_node->word == NULL) {
+		target_node->word = strdup(word);
+		t->size++;
+	}
 }
 
 /*
@@ -168,7 +204,16 @@ int trie_contains_prefix(trie* t, char* prefix)
  */
 void trienode_print(trie_node* node)
 {
-        AZDEBUG("under construction!");
+	int children_idx;
+
+	if (node == NULL)
+		return;
+
+	if (node->word)
+		printf("%s\n", node->word);
+
+	for (children_idx = 0; children_idx < ALPHABET_SIZE; children_idx++)
+		trienode_print(node->children[children_idx]);
 }
 
 /*
@@ -185,7 +230,7 @@ void trienode_print(trie_node* node)
  */
 void trie_print(trie* t)
 {
-        AZDEBUG("under construction!");
+	trienode_print(t->root);
 }
 
 /*
@@ -208,6 +253,21 @@ void trie_print_prefix(trie* t, char* prefix)
         AZDEBUG("under construction!");
 }
 
+static void trienode_free(trie_node* node)
+{
+        int children_idx;
+
+        if (node == NULL)
+                return;
+
+        if (node->word)
+		free(node->word);
+
+        for (children_idx = 0; children_idx < ALPHABET_SIZE; children_idx++)
+                trienode_free(node->children[children_idx]);
+
+	free(node);
+}
 /*
  * Purpose
  *	Frees all memory allocated for the given trie
@@ -225,8 +285,7 @@ void trie_free(trie* t)
 	if (t == NULL)
 		return;
 
-	if (t->root)
-		free(t->root);
+	trienode_free(t->root);
 
 	free(t);
 }
